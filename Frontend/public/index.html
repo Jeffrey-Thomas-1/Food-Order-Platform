@@ -11,7 +11,10 @@
         <div class="header-inner">
             <h1 class="text-center">Food Menu</h1>
             <div class="search-wrap">
-                <input class="search" type="search" placeholder="Search dishes..." aria-label="Search dishes">
+                <div class="search-container">
+                    <input class="search" type="search" placeholder="Search dishes..." aria-label="Search dishes" id="searchInput">
+                    <div class="search-results" id="searchResults"></div>
+                </div>
             </div>
         </div>
     </header>
@@ -26,5 +29,59 @@
             <div class="card card--ramen">Ramen</div>
         </div>
     </main>
+
+    <script>
+        const foodItems = [
+            'Cabbage',
+            'Apple',
+            'Orange',
+            'Briyani',
+            'Fried Rice',
+            'Ramen'
+        ];
+
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+
+            if (searchTerm === '') {
+                searchResults.innerHTML = '';
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            const filtered = foodItems.filter(item => 
+                item.toLowerCase().startsWith(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">No items found</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+
+            searchResults.innerHTML = filtered.map(item => 
+                `<div class="search-result-item">${item}</div>`
+            ).join('');
+            searchResults.style.display = 'block';
+        });
+
+        searchResults.addEventListener('click', (e) => {
+            if (e.target.classList.contains('search-result-item')) {
+                searchInput.value = e.target.textContent;
+                searchResults.innerHTML = '';
+                searchResults.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                searchResults.innerHTML = '';
+                searchResults.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
