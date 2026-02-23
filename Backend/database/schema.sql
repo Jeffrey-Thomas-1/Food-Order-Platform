@@ -20,4 +20,7 @@ INSERT INTO `Food_Menu` (`name`, `category`, `price`, `description`) VALUES
 ('Orange', 'Fruit', 1.20, 'Juicy orange'),
 ('Briyani', 'Main', 6.50, 'Spiced rice with choice of meat or vegetables'),
 ('Fried Rice', 'Main', 5.00, 'Stir-fried rice with vegetables and egg'),
-('Ramen', 'Main', 6.00, 'Noodle soup with savory broth');
+('Ramen', 'Main', 6.00, 'Noodle soup with savory broth'),
+('Cheese Burger', 'Main', 0.00, NULL),
+('Veg Pizza', 'Main', 0.00, NULL),
+('Cold Coffee', 'Drinks', 0.00, NULL);
