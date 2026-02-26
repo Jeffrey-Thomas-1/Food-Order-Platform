@@ -1,87 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Food Ordering System</title>
-    <link rel="stylesheet" href="../src/Styles/Styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foodie Orange Pro</title>
+<link rel="stylesheet" href="./Styles.css">
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <h1 class="text-center">Food Menu</h1>
-            <div class="search-wrap">
-                <div class="search-container">
-                    <input class="search" type="search" placeholder="Search dishes..." aria-label="Search dishes" id="searchInput">
-                    <div class="search-results" id="searchResults"></div>
-                </div>
-            </div>
-        </div>
-    </header>
 
-    <main class="main-area">
-        <div class="container">
-            <div class="card card--veg">Cabbage</div>
-            <div class="card card--fruit">Apple</div>
-            <div class="card card--fruit">Orange</div>
-            <div class="card card--briyani">Briyani</div>
-            <div class="card card--fried">Fried Rice</div>
-            <div class="card card--ramen">Ramen</div>
-        </div>
-    </main>
+<header>
+<div class="logo">Foodie Orange</div>
+<div class="cart-icon" onclick="toggleCart()">🛒
+<span class="badge" id="count">0</span>
+</div>
+</header>
 
-    <script>
-        const foodItems = [
-            'Cabbage',
-            'Apple',
-            'Orange',
-            'Briyani',
-            'Fried Rice',
-            'Ramen'
-        ];
+<div class="controls">
+<input type="text" id="search" placeholder="Search food...">
+<select id="category">
+<option value="all">All Categories</option>
+<option value="Indian">Indian</option>
+<option value="Chinese">Chinese</option>
+<option value="Italian">Italian</option>
+<option value="FastFood">Fast Food</option>
+<option value="Dessert">Dessert</option>
+<option value="Beverage">Beverage</option>
+</select>
+</div>
 
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
+<div class="container">
+<div class="food-grid" id="food"></div>
 
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase().trim();
+<div class="cart" id="cart">
+<h2>Billing Summary</h2>
+<div id="cartItems"></div>
+<div class="summary" id="summary"></div>
+<button class="place-btn" onclick="placeOrder()">Place Order</button>
+</div>
+</div>
 
-            if (searchTerm === '') {
-                searchResults.innerHTML = '';
-                searchResults.style.display = 'none';
-                return;
-            }
+<script>
 
-            const filtered = foodItems.filter(item => 
-                item.toLowerCase().startsWith(searchTerm)
-            );
+// API Configuration
+const API_URL = 'http://localhost:5000/api';
 
-            if (filtered.length === 0) {
-                searchResults.innerHTML = '<div class="no-results">No items found</div>';
-                searchResults.style.display = 'block';
-                return;
-            }
+let foods = [];
+let cart = JSON.parse(localStorage.getItem("cart")) || {};
 
-            searchResults.innerHTML = filtered.map(item => 
-                `<div class="search-result-item">${item}</div>`
-            ).join('');
-            searchResults.style.display = 'block';
-        });
+// ===========================
+// FETCH DATA FROM BACKEND
+// ===========================
 
-        searchResults.addEventListener('click', (e) => {
-            if (e.target.classList.contains('search-result-item')) {
-                searchInput.value = e.target.textContent;
-                searchResults.innerHTML = '';
-                searchResults.style.display = 'none';
-            }
-        });
+// Fetch all foods from backend
+async function fetchFoods() {
+  try {
+    const response = await fetch(`${API_URL}/foods`);
+    if (!response.ok) throw new Error('Failed to fetch foods');
+    
+    const result = await response.json();
+    foods = result.data || [];
+    renderFoods();
+  } catch (error) {
+    console.error('Error fetching foods:', error);
+    document.getElementById("food").innerHTML = '<p style="padding: 20px; color: #e56f12;">⚠️ Unable to load menu. Make sure backend is running on localhost:5000</p>';
+  }
+}
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-container')) {
-                searchResults.innerHTML = '';
-                searchResults.style.display = 'none';
-            }
-        });
-    </script>
+// Fetch categories and populate dropdown
+async function fetchCategories() {
+  try {
+    const response = await fetch(`${API_URL}/categories`);
+    if (!response.ok) throw new Error('Failed to fetch categories');
+    
+    const result = await response.json();
+    const categorySelect = document.getElementById("category");
+    
+    // Clear existing options except "All"
+    while (categorySelect.options.length > 1) {
+      categorySelect.remove(1);
+    }
+    
+    // Add categories from backend
+    result.categories.forEach(cat => {
+      const option = document.createElement("option");
+      option.value = cat;
+      option.textContent = cat;
+      categorySelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+  }
+}
+
+// ===========================
+// RENDER FUNCTIONS
+// ===========================
+
+function renderFoods() {
+  let grid = document.getElementById("food");
+  grid.innerHTML = "";
+  let search = document.getElementById("search").value.toLowerCase();
+  let cat = document.getElementById("category").value;
+
+  foods.filter(f => {
+    return f.name.toLowerCase().includes(search) &&
+      (cat == "all" || f.category == cat);
+  }).forEach(food => {
+    let finalPrice = Math.floor(food.price - (food.price * food.discount / 100));
+    grid.innerHTML += `
+      <div class="card">
+        <div class="discount">${food.discount}% OFF</div>
+        <h4>${food.name}</h4>
+        <div class="old-price">₹${food.price}</div>
+        <div class="new-price">₹${finalPrice}</div>
+        <button class="add-btn" onclick="addToCart(${food.id})">Add</button>
+      </div>`;
+  });
+}
+
+function addToCart(id) {
+  let item = foods.find(f => f.id == id);
+  let finalPrice = Math.floor(item.price - (item.price * item.discount / 100));
+
+  if (cart[id]) cart[id].qty++;
+  else cart[id] = { ...item, finalPrice: finalPrice, qty: 1 };
+
+  saveCart();
+  renderCart();
+}
+
+function renderCart() {
+  let div = document.getElementById("cartItems");
+  div.innerHTML = "";
+  let subtotal = 0;
+  let originalTotal = 0;
+  let totalQty = 0;
+
+  Object.values(cart).forEach(item => {
+    let original = item.price * item.qty;
+    let discounted = item.finalPrice * item.qty;
+
+    originalTotal += original;
+    subtotal += discounted;
+    totalQty += item.qty;
+
+    div.innerHTML += `
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span>${item.name} (${item.qty})</span>
+        <span>₹${discounted}</span>
+      </div>`;
+  });
+
+  let discountSaved = originalTotal - subtotal;
+  let delivery = 50;
+  let tax = subtotal * 0.05;
+  let total = subtotal + delivery + tax;
+
+  document.getElementById("summary").innerHTML = `
+    Subtotal: ₹${subtotal.toFixed(2)}<br>
+    Discount Saved: ₹${discountSaved.toFixed(2)}<br>
+    Delivery: ₹${delivery}<br>
+    GST (5%): ₹${tax.toFixed(2)}<br>
+    <hr>
+    <b>Grand Total: ₹${total.toFixed(2)}</b>
+  `;
+
+  document.getElementById("count").innerText = totalQty;
+}
+
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+// ===========================
+// ORDER MANAGEMENT
+// ===========================
+
+async function placeOrder() {
+  if (Object.keys(cart).length === 0) {
+    alert("Your cart is empty!");
+    return;
+  }
+
+  let subtotal = 0;
+  let items = [];
+  let orderDetails = "";
+
+  Object.values(cart).forEach(item => {
+    let total = item.finalPrice * item.qty;
+    subtotal += total;
+    items.push({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      discount: item.discount,
+      finalPrice: item.finalPrice,
+      quantity: item.qty,
+      total: total
+    });
+    orderDetails += `${item.name} x${item.qty} - ₹${total}\n`;
+  });
+
+  let delivery = 50;
+  let tax = subtotal * 0.05;
+  let grand = subtotal + delivery + tax;
+
+  try {
+    // Send order to backend
+    const response = await fetch(`${API_URL}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        items: items,
+        subtotal: subtotal,
+        delivery: delivery,
+        tax: tax,
+        grandTotal: grand
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to place order');
+
+    const result = await response.json();
+    
+    let message = "Order ID: " + result.orderId + "\n\n";
+    message += orderDetails;
+    message += `\nDelivery: ₹${delivery}`;
+    message += `\nGST (5%): ₹${tax.toFixed(2)}`;
+    message += `\nGrand Total: ₹${grand.toFixed(2)}`;
+    message += `\n\nOrder Placed Successfully! 🎉`;
+    message += `\nStatus: ${result.message}`;
+
+    alert(message);
+
+    // Clear cart
+    cart = {};
+    saveCart();
+    renderCart();
+  } catch (error) {
+    console.error('Error placing order:', error);
+    alert("⚠️ Failed to place order. Make sure backend is running on localhost:5000\n\nError: " + error.message);
+  }
+}
+
+function toggleCart() {
+  document.getElementById("cart").classList.toggle("open");
+}
+
+// ===========================
+// EVENT LISTENERS
+// ===========================
+
+document.getElementById("search").addEventListener("input", renderFoods);
+document.getElementById("category").addEventListener("change", renderFoods);
+
+// Initialize app
+window.addEventListener('load', () => {
+  fetchCategories();
+  fetchFoods();
+  renderCart();
+});
+
+</script>
+
 </body>
 </html>
