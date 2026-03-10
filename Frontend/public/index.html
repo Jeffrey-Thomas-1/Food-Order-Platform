@@ -244,8 +244,9 @@ async function placeOrder() {
     message += `\n\nOrder Placed Successfully! 🎉`;
     message += `\nStatus: ${result.message}`;
 
-    alert(message);
-
+    localStorage.setItem("lastOrder", message);
+    window.location.href = "receipt.html";
+    
     // Clear cart
     cart = {};
     saveCart();
