@@ -36,6 +36,29 @@ font-size:22px;
 font-weight:bold;
 }
 
+/* RIGHT NAV (LOGIN / SIGNUP / CART) */
+
+.nav-right{
+display:flex;
+align-items:center;
+gap:15px;
+}
+
+.nav-right button{
+background:#fff;
+color:#fc8019;
+border:none;
+padding:6px 14px;
+border-radius:8px;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
+}
+
+.nav-right button:hover{
+background:#ffe0c2;
+}
+
 .cart-icon{
 position:relative;
 cursor:pointer;
@@ -55,6 +78,7 @@ font-weight:bold;
 }
 
 /* CONTROLS */
+
 .controls{
 padding:20px;
 display:flex;
@@ -69,6 +93,7 @@ border:1px solid #ffd0a6;
 }
 
 /* LAYOUT */
+
 .container{
 display:flex;
 padding:20px;
@@ -130,6 +155,7 @@ background:#e56f12;
 }
 
 /* CART */
+
 .cart{
 flex:1;
 background:#fff;
@@ -167,10 +193,13 @@ background:#e56f12;
 }
 
 /* MOBILE */
+
 @media(max-width:768px){
+
 .container{
 flex-direction:column;
 }
+
 .cart{
 position:fixed;
 bottom:-100%;
@@ -181,42 +210,45 @@ transition:0.4s;
 border-radius:20px 20px 0 0;
 z-index:999;
 }
+
 .cart.open{
 bottom:0;
+}
+
 }
 
 /* ============================================
    UTILITY CLASSES
    ============================================ */
 
-.text-center {
-    text-align: center;
+.text-center{
+text-align:center;
 }
 
-.text-bold {
-    font-weight: 700;
+.text-bold{
+font-weight:700;
 }
 
-.text-muted {
-    color: #999;
+.text-muted{
+color:#999;
 }
 
-.mb-20 {
-    margin-bottom: 20px;
+.mb-20{
+margin-bottom:20px;
 }
 
-.mt-20 {
-    margin-top: 20px;
+.mt-20{
+margin-top:20px;
 }
 
-.p-20 {
-    padding: 20px;
+.p-20{
+padding:20px;
 }
 
-.rounded {
-    border-radius: var(--border-radius);
+.rounded{
+border-radius:10px;
 }
 
-.shadow {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.shadow{
+box-shadow:0 4px 15px rgba(0,0,0,0.1);
 }
