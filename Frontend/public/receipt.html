@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Receipt</title>
+<link rel="stylesheet" href="../src/Styles/Styles.css">
+</head>
+
+<body>
+
+<div class="receipt-card">
+
+<h2>Your Order Receipt</h2>
+
+<pre id="orderDetails"></pre>
+
+<h3>Add-ons</h3>
+
+<div class="addon-container">
+
+<button onclick="scrollLeft()">◀</button>
+
+<div class="addon-slider">
+
+<div class="addon-card">Garlic Bread</div>
+<div class="addon-card">Chicken Nuggets</div>
+<div class="addon-card">Cheese Dip</div>
+<div class="addon-card">Ice Cream</div>
+<div class="addon-card">Cold Coffee</div>
+
+</div>
+
+<button onclick="scrollRight()">▶</button>
+
+</div>
+
+</div>
+
+<script>
+
+document.getElementById("orderDetails").innerText =
+localStorage.getItem("lastOrder");
+
+function scrollLeft(){
+document.querySelector(".addon-slider")
+.scrollBy({left:-200, behavior:"smooth"});
+}
+
+function scrollRight(){
+document.querySelector(".addon-slider")
+.scrollBy({left:200, behavior:"smooth"});
+}
+
+</script>
+
+</body>
+</html>
