@@ -4,7 +4,220 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Foodie Orange Pro</title>
-<link rel="stylesheet" href="../src/Styles/Styles.css">
+
+<style>
+:root{
+--primary:#fc8019;
+--primary-dark:#e56f12;
+--bg1:#fff4e6;
+--bg2:#ffe8cc;
+--dark:#222;
+}
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,var(--bg1),var(--bg2));
+}
+
+/* HEADER */
+header{
+position:sticky;
+top:0;
+background:linear-gradient(to right,#fc8019,#ff9f43);
+color:#fff;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 30px;
+box-shadow:0 4px 15px rgba(0,0,0,0.15);
+z-index:1000;
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+}
+
+.cart-icon{
+position:relative;
+cursor:pointer;
+font-size:22px;
+}
+.nav-right{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+.nav-btn{
+background:#fff;
+color:#fc8019;
+border:none;
+padding:6px 14px;
+border-radius:6px;
+font-weight:600;
+cursor:pointer;
+transition:0.2s;
+}
+
+.nav-btn:hover{
+background:#ffe2c7;
+}
+
+.badge{
+position:absolute;
+top:-8px;
+right:-10px;
+background:#fff;
+color:#fc8019;
+font-size:12px;
+padding:2px 6px;
+border-radius:50%;
+font-weight:bold;
+}
+
+/* CONTROLS */
+.controls{
+padding:20px;
+display:flex;
+gap:15px;
+flex-wrap:wrap;
+}
+
+.controls input, select{
+padding:10px;
+border-radius:10px;
+border:1px solid #ffd0a6;
+}
+
+/* LAYOUT */
+.container{
+display:flex;
+padding:20px;
+gap:20px;
+}
+
+.food-grid{
+flex:3;
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+gap:20px;
+}
+
+.card{
+background:#fff;
+border-radius:16px;
+box-shadow:0 8px 20px rgba(0,0,0,0.08);
+padding:20px;
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+.discount{
+background:#fc8019;
+color:#fff;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+display:inline-block;
+margin-bottom:8px;
+}
+
+.old-price{
+text-decoration:line-through;
+color:#888;
+font-size:14px;
+}
+
+.new-price{
+font-weight:bold;
+color:#222;
+}
+
+.add-btn{
+background:#fc8019;
+color:#fff;
+border:none;
+padding:8px 15px;
+border-radius:8px;
+cursor:pointer;
+margin-top:8px;
+}
+
+.add-btn:hover{
+background:#e56f12;
+}
+
+/* CART */
+.cart{
+flex:1;
+background:#fff;
+border-radius:16px;
+box-shadow:0 8px 20px rgba(0,0,0,0.12);
+padding:20px;
+height:80vh;
+overflow:auto;
+position:sticky;
+top:90px;
+}
+
+.summary{
+border-top:1px solid #eee;
+padding-top:10px;
+margin-top:10px;
+font-size:14px;
+line-height:1.6;
+}
+
+.place-btn{
+background:#fc8019;
+color:#fff;
+border:none;
+width:100%;
+padding:12px;
+border-radius:10px;
+margin-top:15px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.place-btn:hover{
+background:#e56f12;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+.container{
+flex-direction:column;
+}
+.cart{
+position:fixed;
+bottom:-100%;
+left:0;
+width:100%;
+height:60%;
+transition:0.4s;
+border-radius:20px 20px 0 0;
+z-index:999;
+}
+.cart.open{
+bottom:0;
+}
+.nav-btn{
+padding:5px 10px;
+font-size:12px;
+}
+}
+</style>
 </head>
 <body>
 
@@ -14,9 +227,9 @@
 
 <div class="nav-right">
 
-<button onclick="location.href='login.html'">Login</button>
+<button class="nav-btn" onclick="location.href='login.html'">Login</button>
 
-<button onclick="location.href='signup.html'">Sign Up</button>
+<button class="nav-btn" onclick="location.href='signup.html'">Sign Up</button>
 
 <div class="cart-icon" onclick="toggleCart()">🛒
 <span class="badge" id="count">0</span>
@@ -52,232 +265,156 @@
 
 <script>
 
-// API Configuration
-const API_URL = 'http://localhost:5000/api';
+/* AUTO GENERATE 100+ DISHES */
 
-let foods = [];
-let cart = JSON.parse(localStorage.getItem("cart")) || {};
+const categories={
+Indian:["Biryani","Butter Chicken","Paneer Tikka","Dal Makhani","Roti","Kebab","Samosa"],
+Chinese:["Noodles","Fried Rice","Manchurian","Spring Roll","Dumplings"],
+Italian:["Pizza","Pasta","Lasagna","Risotto"],
+FastFood:["Burger","Fries","Sandwich","Wrap"],
+Dessert:["Ice Cream","Brownie","Cake","Gulab Jamun"],
+Beverage:["Milkshake","Cold Coffee","Mojito","Smoothie"]
+};
 
-// ===========================
-// FETCH DATA FROM BACKEND
-// ===========================
+let foods=[];
+let id=1;
 
-// Fetch all foods from backend
-async function fetchFoods() {
-  try {
-    const response = await fetch(`${API_URL}/foods`);
-    if (!response.ok) throw new Error('Failed to fetch foods');
-    
-    const result = await response.json();
-    foods = result.data || [];
-    renderFoods();
-  } catch (error) {
-    console.error('Error fetching foods:', error);
-    document.getElementById("food").innerHTML = '<p style="padding: 20px; color: #e56f12;">⚠️ Unable to load menu. Make sure backend is running on localhost:5000</p>';
-  }
-}
-
-// Fetch categories and populate dropdown
-async function fetchCategories() {
-  try {
-    const response = await fetch(`${API_URL}/categories`);
-    if (!response.ok) throw new Error('Failed to fetch categories');
-    
-    const result = await response.json();
-    const categorySelect = document.getElementById("category");
-    
-    // Clear existing options except "All"
-    while (categorySelect.options.length > 1) {
-      categorySelect.remove(1);
-    }
-    
-    // Add categories from backend
-    result.categories.forEach(cat => {
-      const option = document.createElement("option");
-      option.value = cat;
-      option.textContent = cat;
-      categorySelect.appendChild(option);
-    });
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-  }
-}
-
-// ===========================
-// RENDER FUNCTIONS
-// ===========================
-
-function renderFoods() {
-  let grid = document.getElementById("food");
-  grid.innerHTML = "";
-  let search = document.getElementById("search").value.toLowerCase();
-  let cat = document.getElementById("category").value;
-
-  foods.filter(f => {
-    return f.name.toLowerCase().includes(search) &&
-      (cat == "all" || f.category == cat);
-  }).forEach(food => {
-    let finalPrice = Math.floor(food.price - (food.price * food.discount / 100));
-    grid.innerHTML += `
-      <div class="card">
-        ${food.discount ? `<div class="discount">${food.discount}% OFF</div>` : ""}
-        <h4>${food.name}</h4>
-        <div class="old-price">₹${food.price}</div>
-        <div class="new-price">₹${finalPrice}</div>
-        <button class="add-btn" onclick="addToCart(${food.id})">Add</button>
-      </div>`;
-  });
-
-  if(grid.innerHTML === ""){
-    grid.innerHTML = "<p style='padding:20px'>No food found</p>";
-  }
-}
-
-function addToCart(id) {
-  let item = foods.find(f => f.id == id);
-  let finalPrice = Math.floor(item.price - (item.price * item.discount / 100));
-
-  if (cart[id]) cart[id].qty++;
-  else cart[id] = { ...item, finalPrice: finalPrice, qty: 1 };
-
-  saveCart();
-  renderCart();
-}
-
-function renderCart() {
-  let div = document.getElementById("cartItems");
-  div.innerHTML = "";
-  let subtotal = 0;
-  let originalTotal = 0;
-  let totalQty = 0;
-
-  Object.values(cart).forEach(item => {
-    let original = item.price * item.qty;
-    let discounted = item.finalPrice * item.qty;
-
-    originalTotal += original;
-    subtotal += discounted;
-    totalQty += item.qty;
-
-    div.innerHTML += `
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <span>${item.name} (${item.qty})</span>
-        <span>₹${discounted}</span>
-      </div>`;
-  });
-
-  let discountSaved = originalTotal - subtotal;
-  let delivery = 50;
-  let tax = subtotal * 0.05;
-  let total = subtotal + delivery + tax;
-
-  document.getElementById("summary").innerHTML = `
-    Subtotal: ₹${subtotal.toFixed(2)}<br>
-    Discount Saved: ₹${discountSaved.toFixed(2)}<br>
-    Delivery: ₹${delivery}<br>
-    GST (5%): ₹${tax.toFixed(2)}<br>
-    <hr>
-    <b>Grand Total: ₹${total.toFixed(2)}</b>
-  `;
-
-  document.getElementById("count").innerText = totalQty;
-}
-
-function saveCart() {
-  localStorage.setItem("cart", JSON.stringify(cart));
-}
-
-// ===========================
-// ORDER MANAGEMENT
-// ===========================
-
-async function placeOrder() {
-  if (Object.keys(cart).length === 0) {
-    alert("Your cart is empty!");
-    return;
-  }
-
-  let subtotal = 0;
-  let items = [];
-  let orderDetails = "";
-
-  Object.values(cart).forEach(item => {
-    let total = item.finalPrice * item.qty;
-    subtotal += total;
-    items.push({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      discount: item.discount,
-      finalPrice: item.finalPrice,
-      quantity: item.qty,
-      total: total
-    });
-    orderDetails += `${item.name} x${item.qty} - ₹${total}\n`;
-  });
-
-  let delivery = 50;
-  let tax = subtotal * 0.05;
-  let grand = subtotal + delivery + tax;
-
-  try {
-    // Send order to backend
-    const response = await fetch(`${API_URL}/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        items: items,
-        subtotal: subtotal,
-        delivery: delivery,
-        tax: tax,
-        grandTotal: grand
-      })
-    });
-
-    if (!response.ok) throw new Error('Failed to place order');
-
-    const result = await response.json();
-    
-    let message = "Order ID: " + result.orderId + "\n\n";
-    message += orderDetails;
-    message += `\nDelivery: ₹${delivery}`;
-    message += `\nGST (5%): ₹${tax.toFixed(2)}`;
-    message += `\nGrand Total: ₹${grand.toFixed(2)}`;
-    message += `\n\nOrder Placed Successfully! 🎉`;
-    message += `\nStatus: ${result.message}`;
-
-    localStorage.setItem("lastOrder", message);
-    window.location.href = "receipt.html";
-    
-    // Clear cart
-    cart = {};
-    saveCart();
-    renderCart();
-  } catch (error) {
-    console.error('Error placing order:', error);
-    alert("⚠️ Failed to place order. Make sure backend is running on localhost:5000\n\nError: " + error.message);
-  }
-}
-
-function toggleCart() {
-  document.getElementById("cart").classList.toggle("open");
-}
-
-// ===========================
-// EVENT LISTENERS
-// ===========================
-
-document.getElementById("search").addEventListener("input", renderFoods);
-document.getElementById("category").addEventListener("change", renderFoods);
-
-// Initialize app
-window.addEventListener('load', () => {
-  fetchCategories();
-  fetchFoods();
-  renderCart();
+for(let cat in categories){
+for(let i=0;i<categories[cat].length;i++){
+for(let j=1;j<=4;j++){
+let price=Math.floor(Math.random()*200)+120;
+let discount=Math.floor(Math.random()*30)+10;
+foods.push({
+id:id++,
+name:categories[cat][i]+" Special "+j,
+category:cat,
+price:price,
+discount:discount
 });
+}
+}
+}
+
+/* CART */
+let cart=JSON.parse(localStorage.getItem("cart"))||{};
+
+function renderFoods(){
+let grid=document.getElementById("food");
+grid.innerHTML="";
+let search=document.getElementById("search").value.toLowerCase();
+let cat=document.getElementById("category").value;
+
+foods.filter(f=>{
+return f.name.toLowerCase().includes(search) &&
+(cat=="all" || f.category==cat);
+}).forEach(food=>{
+let finalPrice=Math.floor(food.price-(food.price*food.discount/100));
+grid.innerHTML+=`
+<div class="card">
+<div class="discount">${food.discount}% OFF</div>
+<h4>${food.name}</h4>
+<div class="old-price">₹${food.price}</div>
+<div class="new-price">₹${finalPrice}</div>
+<button class="add-btn" onclick="addToCart(${food.id})">Add</button>
+</div>`;
+});
+}
+
+function addToCart(id){
+let item=foods.find(f=>f.id==id);
+let finalPrice=Math.floor(item.price-(item.price*item.discount/100));
+
+if(cart[id]) cart[id].qty++;
+else cart[id]={...item,finalPrice:finalPrice,qty:1};
+
+saveCart();
+renderCart();
+}
+
+function renderCart(){
+let div=document.getElementById("cartItems");
+div.innerHTML="";
+let subtotal=0;
+let originalTotal=0;
+let totalQty=0;
+
+Object.values(cart).forEach(item=>{
+let original=item.price*item.qty;
+let discounted=item.finalPrice*item.qty;
+
+originalTotal+=original;
+subtotal+=discounted;
+totalQty+=item.qty;
+
+div.innerHTML+=`
+<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+<span>${item.name} (${item.qty})</span>
+<span>₹${discounted}</span>
+</div>`;
+});
+
+let discountSaved=originalTotal-subtotal;
+let delivery=50;
+let tax=subtotal*0.05;
+let total=subtotal+delivery+tax;
+
+document.getElementById("summary").innerHTML=`
+Subtotal: ₹${subtotal.toFixed(2)}<br>
+Discount Saved: ₹${discountSaved.toFixed(2)}<br>
+Delivery: ₹${delivery}<br>
+GST (5%): ₹${tax.toFixed(2)}<br>
+<hr>
+<b>Grand Total: ₹${total.toFixed(2)}</b>
+`;
+
+document.getElementById("count").innerText=totalQty;
+}
+
+function saveCart(){
+localStorage.setItem("cart",JSON.stringify(cart));
+}
+
+function placeOrder(){
+if(Object.keys(cart).length===0){
+alert("Your cart is empty!");
+return;
+}
+
+let orderId=Math.floor(100000+Math.random()*900000);
+let message="Order ID: "+orderId+"\n\n";
+let subtotal=0;
+
+Object.values(cart).forEach(item=>{
+let total=item.finalPrice*item.qty;
+subtotal+=total;
+message+=`${item.name} x${item.qty} - ₹${total}\n`;
+});
+
+let delivery=50;
+let tax=subtotal*0.05;
+let grand=subtotal+delivery+tax;
+
+message+=`\nDelivery: ₹${delivery}`;
+message+=`\nGST: ₹${tax.toFixed(2)}`;
+message+=`\nGrand Total: ₹${grand.toFixed(2)}`;
+message+=`\n\nOrder Placed Successfully! 🎉`;
+
+alert(message);
+
+cart={};
+saveCart();
+renderCart();
+}
+
+function toggleCart(){
+document.getElementById("cart").classList.toggle("open");
+}
+
+document.getElementById("search").addEventListener("input",renderFoods);
+document.getElementById("category").addEventListener("change",renderFoods);
+
+renderFoods();
+renderCart();
 
 </script>
 
