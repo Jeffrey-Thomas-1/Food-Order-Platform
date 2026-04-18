@@ -16,13 +16,15 @@
 
 <h2>Create Account</h2>
 
-<input type="text" placeholder="Username">
+<input id="username" type="text" placeholder="Username">
 
-<input type="email" placeholder="E-Mail Address">
+<input id="email" type="email" placeholder="E-Mail Address">
 
-<input type="password" placeholder="Password">
+<input id="password" type="password" placeholder="Password">
 
-<button>Register</button>
+<button onclick="signup()">Register</button>
+
+<p id="message"></p>
 
 <p>
 Already have account?
@@ -30,6 +32,52 @@ Already have account?
 </p>
 
 </div>
+
+<script>
+const API_BASE="http://localhost:5000";
+
+async function signup(){
+const username=document.getElementById("username").value.trim();
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+const message=document.getElementById("message");
+
+if(!username || !email || !password){
+message.innerText="Please fill all fields.";
+message.style.color="#c0392b";
+return;
+}
+
+if(password.length<6){
+message.innerText="Password must be at least 6 characters.";
+message.style.color="#c0392b";
+return;
+}
+
+try{
+const response=await fetch(`${API_BASE}/api/auth/signup`,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username,email,password})
+});
+
+const result=await response.json();
+if(!response.ok || !result.success){
+throw new Error(result.error||"Signup failed");
+}
+
+localStorage.setItem("authToken",result.token);
+localStorage.setItem("authUser",JSON.stringify(result.user));
+message.innerText="Signup successful. Redirecting...";
+message.style.color="#1e8449";
+setTimeout(()=>{ window.location.href="index.html"; },600);
+}
+catch(error){
+message.innerText=error.message;
+message.style.color="#c0392b";
+}
+}
+</script>
 
 </body>
 </html>

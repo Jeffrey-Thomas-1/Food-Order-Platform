@@ -43,10 +43,41 @@ Back to Menu
 
 <script>
 
-let order = localStorage.getItem("lastOrder");
+let rawOrder=localStorage.getItem("lastOrder");
 
-document.getElementById("orderDetails").innerText =
-order ? order : "No recent order found.";
+try{
+if(!rawOrder){
+document.getElementById("orderDetails").innerText="No recent order found.";
+}
+else{
+let order=JSON.parse(rawOrder);
+let lines=[];
+lines.push(`Order ID: ${order.orderId||"N/A"}`);
+lines.push(`Receipt No: ${order.receiptNumber||"N/A"}`);
+lines.push(`Customer: ${order.customerName||"N/A"}`);
+lines.push(`Phone: ${order.customerPhone||"N/A"}`);
+lines.push(`Address: ${order.deliveryAddress||"N/A"}`);
+lines.push("");
+
+if(Array.isArray(order.items)){
+order.items.forEach(item=>{
+const rowTotal=(Number(item.price)||0)*(Number(item.qty)||0);
+lines.push(`${item.name} x${item.qty} - ₹${rowTotal.toFixed(2)}`);
+});
+}
+
+lines.push("");
+lines.push(`Subtotal: ₹${Number(order.subtotal||0).toFixed(2)}`);
+lines.push(`Delivery: ₹${Number(order.delivery||0).toFixed(2)}`);
+lines.push(`GST: ₹${Number(order.tax||0).toFixed(2)}`);
+lines.push(`Grand Total: ₹${Number(order.grandTotal||0).toFixed(2)}`);
+
+document.getElementById("orderDetails").innerText=lines.join("\n");
+}
+}
+catch(error){
+document.getElementById("orderDetails").innerText="Unable to read latest order.";
+}
 
 function scrollLeft(){
 document.querySelector(".addon-slider")

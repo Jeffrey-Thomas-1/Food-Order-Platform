@@ -7,12 +7,114 @@ USE `database`;
 -- Orders table for storing placed orders
 CREATE TABLE IF NOT EXISTS `orders` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NULL,
   `items` JSON NOT NULL,
   `subtotal` DECIMAL(10,2) NOT NULL,
   `delivery` DECIMAL(10,2) DEFAULT 50.00,
   `tax` DECIMAL(10,2) NOT NULL,
   `grand_total` DECIMAL(10,2) NOT NULL,
   `status` VARCHAR(20) DEFAULT 'pending',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Receipt table for storing receipt snapshot per order
+CREATE TABLE IF NOT EXISTS `Receipt` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `order_id` INT NOT NULL,
+  `user_id` INT NULL,
+  `receipt_number` VARCHAR(40) NOT NULL UNIQUE,
+  `items` JSON NOT NULL,
+  `subtotal` DECIMAL(10,2) NOT NULL,
+  `delivery` DECIMAL(10,2) NOT NULL,
+  `tax` DECIMAL(10,2) NOT NULL,
+  `grand_total` DECIMAL(10,2) NOT NULL,
+  `customer_name` VARCHAR(120) NOT NULL,
+  `customer_phone` VARCHAR(30) NOT NULL,
+  `delivery_address` VARCHAR(255) NOT NULL,
+  `status` VARCHAR(20) DEFAULT 'generated',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_receipt_order_id` (`order_id`),
+  CONSTRAINT `fk_receipt_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Safe migration for existing databases created before user-linked orders/receipts
+SET @orders_user_id_exists := (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'orders'
+    AND COLUMN_NAME = 'user_id'
+);
+SET @orders_user_id_sql := IF(
+  @orders_user_id_exists = 0,
+  'ALTER TABLE `orders` ADD COLUMN `user_id` INT NULL',
+  'SELECT 1'
+);
+PREPARE stmt_orders_user_id FROM @orders_user_id_sql;
+EXECUTE stmt_orders_user_id;
+DEALLOCATE PREPARE stmt_orders_user_id;
+
+SET @receipt_user_id_exists := (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'Receipt'
+    AND COLUMN_NAME = 'user_id'
+);
+SET @receipt_user_id_sql := IF(
+  @receipt_user_id_exists = 0,
+  'ALTER TABLE `Receipt` ADD COLUMN `user_id` INT NULL',
+  'SELECT 1'
+);
+PREPARE stmt_receipt_user_id FROM @receipt_user_id_sql;
+EXECUTE stmt_receipt_user_id;
+DEALLOCATE PREPARE stmt_receipt_user_id;
+
+-- Backfill receipts for historical orders that do not have one yet
+INSERT INTO `Receipt` (
+  `order_id`,
+  `user_id`,
+  `receipt_number`,
+  `items`,
+  `subtotal`,
+  `delivery`,
+  `tax`,
+  `grand_total`,
+  `customer_name`,
+  `customer_phone`,
+  `delivery_address`,
+  `status`,
+  `created_at`
+)
+SELECT
+  o.`id`,
+  o.`user_id`,
+  CONCAT('REC-', DATE_FORMAT(o.`created_at`, '%Y%m%d'), '-', o.`id`) AS `receipt_number`,
+  o.`items`,
+  o.`subtotal`,
+  o.`delivery`,
+  o.`tax`,
+  o.`grand_total`,
+  'Walk-in Customer' AS `customer_name`,
+  'N/A' AS `customer_phone`,
+  'Address not captured' AS `delivery_address`,
+  'generated' AS `status`,
+  o.`created_at`
+FROM `orders` o
+LEFT JOIN `Receipt` r ON r.`order_id` = o.`id`
+WHERE r.`order_id` IS NULL;
+
+-- Keep receipt ownership aligned with order ownership for old rows
+UPDATE `Receipt` r
+JOIN `orders` o ON o.`id` = r.`order_id`
+SET r.`user_id` = o.`user_id`
+WHERE r.`user_id` IS NULL AND o.`user_id` IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(80) NOT NULL,
+  `email` VARCHAR(120) NOT NULL UNIQUE,
+  `password_hash` VARCHAR(255) NOT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -26,8 +128,33 @@ CREATE TABLE IF NOT EXISTS `Food_Menu` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Remove existing duplicate menu rows (same name + category), keeping the oldest row
+DELETE fm1
+FROM `Food_Menu` fm1
+JOIN `Food_Menu` fm2
+  ON fm1.`name` = fm2.`name`
+ AND IFNULL(fm1.`category`, '') = IFNULL(fm2.`category`, '')
+ AND fm1.`id` > fm2.`id`;
+
+-- Add unique key only if it does not already exist
+SET @food_menu_uq_exists := (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.STATISTICS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'Food_Menu'
+    AND INDEX_NAME = 'uq_food_menu_name_category'
+);
+SET @food_menu_uq_sql := IF(
+  @food_menu_uq_exists = 0,
+  'ALTER TABLE `Food_Menu` ADD UNIQUE KEY `uq_food_menu_name_category` (`name`, `category`)',
+  'SELECT 1'
+);
+PREPARE stmt_food_menu_uq FROM @food_menu_uq_sql;
+EXECUTE stmt_food_menu_uq;
+DEALLOCATE PREPARE stmt_food_menu_uq;
+
 -- Insert sample menu items (matches frontend categories and price range)
-INSERT INTO `Food_Menu` (`name`, `category`, `price`, `discount`, `description`) VALUES
+INSERT IGNORE INTO `Food_Menu` (`name`, `category`, `price`, `discount`, `description`) VALUES
 -- INDIAN
 ('Biryani Special 1', 'Indian', 250.00, 15, 'Fragrant rice with spices and tender meat'),
 ('Biryani Special 2', 'Indian', 240.00, 18, 'Hyderabadi style biryani with vegetables'),

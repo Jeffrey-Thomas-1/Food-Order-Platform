@@ -1,6 +1,6 @@
 # Foodie Orange Pro - Food Ordering System
 
-A full-stack food ordering application with a React/Vanilla JS frontend and Node.js/Express backend.
+A full-stack food ordering application with a Vanilla JavaScript frontend and Node.js/Express backend.
 
 ---
 
@@ -14,9 +14,10 @@ Start-Servers.bat
 ```
 
 ✅ This will automatically:
-1. Start Backend API (port 5000)
-2. Start Frontend Server (port 8000)
-3. Open browser to http://localhost:8000
+1. Stop stale listeners on ports 5000 and 8000 (if any)
+2. Start Backend API (port 5000)
+3. Start Frontend Server (port 8000)
+4. Open browser to http://localhost:8000/public/index.html
 
 **That's it!** Everything runs in the background. 🚀
 
@@ -39,9 +40,16 @@ Or run from PowerShell terminal in the project root:
 
 ```
 Team-Project-Shi/
+├── Start-Servers.bat          # One-click startup (stops old listeners, starts both servers)
+├── Start-Servers.ps1          # PowerShell startup alternative
 ├── Frontend/
 │   ├── public/
-│   │   └── index.html          # Main web app (uses API endpoints)
+│   │   ├── index.html          # Main web app (uses API endpoints)
+│   │   ├── login.html          # User login page
+│   │   ├── signup.html         # User registration page
+│   │   ├── profile.html        # Logged-in user profile details
+│   │   ├── my-receipts.html    # Logged-in receipt history page
+│   │   └── receipt.html        # Last order receipt view
 │   └── src/
 │       └── Styles/
 │           └── Styles.css      # Orange theme styling
@@ -50,8 +58,7 @@ Team-Project-Shi/
 │   ├── package.json            # Node dependencies
 │   ├── .env.example            # Environment variables template
 │   └── database/
-│       └── schema.sql          # MySQL schema & sample data
-└── Frontendtroubleshoot.html   # Standalone/testing version
+│       └── schema.sql          # MySQL schema, migrations, and seed data
 ```
 
 ## System Architecture
@@ -61,8 +68,11 @@ Team-Project-Shi/
 - **Features**:
   - Dynamic food menu (fetched from backend API)
   - Search & category filtering
-  - Shopping cart with local storage
-  - Order placement with API integration
+  - Shopping cart with local storage and quantity controls (+/-)
+  - Add/Remove actions on menu cards (Remove appears when item is in cart)
+  - Auth-gated order placement (redirects to login if not logged in)
+  - Profile icon dropdown for logged-in users (View Profile, My Receipts, Logout)
+  - Receipt history page for authenticated users
   - Responsive mobile design
   - Orange theme (#fc8019 primary color)
 
@@ -73,14 +83,20 @@ Team-Project-Shi/
   - `GET /api/foods?category=Indian` - Filter by category
   - `GET /api/categories` - Get all categories
   - `GET /api/foods/:id` - Get single food item
-  - `POST /api/orders` - Place new order
+  - `POST /api/orders` - Place new order (uses auth token when provided to link order to user)
+  - `POST /api/auth/signup` - Register user account
+  - `POST /api/auth/login` - Login and get auth token
+  - `GET /api/auth/me` - Get current authenticated user profile
+  - `GET /api/receipts/my` - Get receipt history for authenticated user
   - `GET /api/health` - Health check
 
 ### Database
 - **Type**: MySQL
 - **Tables**:
-  - `Food_Menu` - 52 food items with pricing & discounts
-  - `orders` - Stores placed orders with JSON items
+  - `Food_Menu` - 52 unique food items with pricing & discounts
+  - `orders` - Stores placed orders with JSON items (supports user_id linkage)
+  - `Receipt` - Stores generated receipt snapshots per order
+  - `users` - Stores account credentials (hashed passwords)
 
 ## Setup Instructions
 
@@ -96,7 +112,7 @@ source Backend/database/schema.sql
 
 Expected output:
 - Database `database` created
-- Tables `Food_Menu` (52 items) and `orders` created
+- Tables `Food_Menu` (52 items), `orders`, `Receipt`, and `users` created
 
 ### 2. Backend Setup
 
@@ -125,9 +141,9 @@ file:///C:/Users/jeffr/Desktop/Jeffrey%20Clg/Team-Project-Shi/Frontend/public/in
 
 Or with a simple HTTP server:
 ```powershell
-cd Frontend/public
+cd Frontend
 python -m http.server 8000
-# Then visit http://localhost:8000
+# Then visit http://localhost:8000/public/index.html
 ```
 
 ## Data Flow
@@ -135,7 +151,7 @@ python -m http.server 8000
 ### Getting Food Items
 ```
 Frontend (index.html)
-  ↓ fetch('/api/foods')
+  ↓ fetch('http://localhost:5000/api/foods')
 Backend (server.js)
   ↓ SELECT * FROM Food_Menu
 MySQL Database
@@ -144,9 +160,18 @@ MySQL Database
 ### Placing Order
 ```
 Frontend (index.html)
-  ↓ POST /api/orders
+  ↓ POST /api/orders (Bearer token when logged in)
 Backend (server.js)
-  ↓ INSERT INTO orders
+  ↓ INSERT INTO orders + INSERT INTO Receipt
+MySQL Database
+```
+
+### Viewing Receipt History
+```
+Frontend (my-receipts.html)
+  ↓ GET /api/receipts/my (Bearer token)
+Backend (server.js)
+  ↓ SELECT receipts WHERE user_id = auth user
 MySQL Database
 ```
 
@@ -168,6 +193,11 @@ MySQL Database
 4. ✅ **Created backend API** to serve database data
 5. ✅ **Updated frontend** to use API instead of hardcoded data
 6. ✅ **Added order storage** via `orders` table
+7. ✅ **Added receipt generation and storage** via `Receipt` table
+8. ✅ **Added authenticated user profile and receipt history endpoints**
+9. ✅ **Added profile dropdown UI with View Profile / My Receipts / Logout**
+10. ✅ **Added cart quantity controls and item remove actions**
+11. ✅ **Removed duplicate food records and enforced unique menu seeding**
 
 ## Environment Configuration (.env File)
 

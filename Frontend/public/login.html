@@ -13,11 +13,13 @@
 
 <h2>Login</h2>
 
-<input type="email" placeholder="E-Mail Address">
+<input id="email" type="email" placeholder="E-Mail Address">
 
-<input type="password" placeholder="Password">
+<input id="password" type="password" placeholder="Password">
 
-<button>Login</button>
+<button onclick="login()">Login</button>
+
+<p id="message"></p>
 
 <p>
 Don't have account?
@@ -25,6 +27,47 @@ Don't have account?
 </p>
 
 </div>
+
+<script>
+const API_BASE="http://localhost:5000";
+
+async function login(){
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+const message=document.getElementById("message");
+const params=new URLSearchParams(window.location.search);
+const returnUrl=params.get("returnUrl")||"index.html";
+
+if(!email || !password){
+message.innerText="Please enter email and password.";
+message.style.color="#c0392b";
+return;
+}
+
+try{
+const response=await fetch(`${API_BASE}/api/auth/login`,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email,password})
+});
+
+const result=await response.json();
+if(!response.ok || !result.success){
+throw new Error(result.error||"Login failed");
+}
+
+localStorage.setItem("authToken",result.token);
+localStorage.setItem("authUser",JSON.stringify(result.user));
+message.innerText="Login successful. Redirecting...";
+message.style.color="#1e8449";
+setTimeout(()=>{ window.location.href=returnUrl; },600);
+}
+catch(error){
+message.innerText=error.message;
+message.style.color="#c0392b";
+}
+}
+</script>
 
 </body>
 </html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile</title>
+<link rel="stylesheet" href="../src/Styles/Styles.css">
+<style>
+.profile-wrap{
+max-width:680px;
+margin:50px auto;
+padding:20px;
+}
+.profile-card{
+background:#fff;
+border-radius:14px;
+padding:24px;
+box-shadow:0 8px 20px rgba(0,0,0,0.12);
+}
+.profile-row{
+display:flex;
+justify-content:space-between;
+border-bottom:1px solid #f2f2f2;
+padding:12px 0;
+gap:10px;
+}
+.label{font-weight:700;color:#555;}
+.value{color:#222;word-break:break-word;}
+.top-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.link-btn{background:#fff;color:#fc8019;border:1px solid #fc8019;padding:8px 12px;border-radius:8px;cursor:pointer;}
+.link-btn:hover{background:#fff2e5;}
+</style>
+</head>
+<body>
+<div class="profile-wrap">
+<div class="top-actions">
+<h2 style="color:#fc8019;">My Profile</h2>
+<button class="link-btn" onclick="location.href='index.html'">Back to Menu</button>
+</div>
+<div class="profile-card">
+<div class="profile-row"><span class="label">Username</span><span class="value" id="username">Loading...</span></div>
+<div class="profile-row"><span class="label">Email</span><span class="value" id="email">Loading...</span></div>
+<div class="profile-row"><span class="label">Joined</span><span class="value" id="joined">Loading...</span></div>
+</div>
+</div>
+
+<script>
+const API_BASE="http://localhost:5000";
+
+function getAuthToken(){
+return localStorage.getItem("authToken")||"";
+}
+
+function redirectToLogin(){
+const nextUrl=encodeURIComponent("profile.html");
+window.location.href=`login.html?returnUrl=${nextUrl}`;
+}
+
+async function loadProfile(){
+const token=getAuthToken();
+if(!token){
+redirectToLogin();
+return;
+}
+
+try{
+const response=await fetch(`${API_BASE}/api/auth/me`,{
+headers:{"Authorization":`Bearer ${token}`}
+});
+
+const result=await response.json();
+if(response.status===401){
+redirectToLogin();
+return;
+}
+if(!response.ok || !result.success){
+throw new Error(result.error||"Failed to load profile");
+}
+
+const user=result.user||{};
+document.getElementById("username").innerText=user.username||"N/A";
+document.getElementById("email").innerText=user.email||"N/A";
+document.getElementById("joined").innerText=user.created_at?new Date(user.created_at).toLocaleString():"N/A";
+}
+catch(error){
+document.getElementById("username").innerText="Unable to load";
+document.getElementById("email").innerText="Unable to load";
+document.getElementById("joined").innerText="Unable to load";
+console.error("Profile error:",error);
+}
+}
+
+loadProfile();
+</script>
+</body>
+</html>
