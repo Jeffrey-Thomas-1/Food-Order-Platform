@@ -4,7 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Receipt</title>
-<link rel="stylesheet" href="../src/Styles/Styles.css">
+
+<style>
+body{
+  font-family: 'Segoe UI', sans-serif;
+  background:#f5e6d3;
+}
+
+.receipt-card{
+  width:400px;
+  margin:50px auto;
+  background:#eee;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+h2{
+  color:#fc8019;
+}
+
+.addon-container{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.addon-slider{
+  display:flex;
+  overflow-x:auto;
+  gap:10px;
+}
+
+.addon-card{
+  min-width:120px;
+  background:#fff;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+}
+
+.place-btn{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#fc8019;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.place-btn:hover{
+  background:#e56f12;
+}
+</style>
 </head>
 
 <body>
@@ -18,27 +73,24 @@
 <h3>Add-ons</h3>
 
 <div class="addon-container">
-
 <button onclick="scrollLeft()">◀</button>
 
 <div class="addon-slider">
-<div class="addon-card">Garlic Bread</div>
-<div class="addon-card">Chicken Nuggets</div>
-<div class="addon-card">Cheese Dip</div>
-<div class="addon-card">Ice Cream</div>
-<div class="addon-card">Cold Coffee</div>
+  <div class="addon-card">Garlic Bread</div>
+  <div class="addon-card">Chicken Nuggets</div>
+  <div class="addon-card">Cheese Dip</div>
+  <div class="addon-card">Ice Cream</div>
+  <div class="addon-card">Cold Coffee</div>
 </div>
 
 <button onclick="scrollRight()">▶</button>
-
 </div>
 
-<!-- ✅ BACK BUTTON -->
+<!-- ✅ CLEAN BUTTONS -->
 <button onclick="location.href='index.html'" class="place-btn">
 Back to Menu
 </button>
 
-<!-- ✅ ADD THIS BUTTON HERE -->
 <button onclick="location.href='feedback.html'" class="place-btn">
 Give Feedback
 </button>
@@ -47,12 +99,14 @@ Give Feedback
 
 <script>
 
+// LOAD ORDER DATA
 let rawOrder = localStorage.getItem("lastOrder");
 
-try {
-  if (!rawOrder) {
+try{
+  if(!rawOrder){
     document.getElementById("orderDetails").innerText = "No recent order found.";
-  } else {
+  }
+  else{
     let order = JSON.parse(rawOrder);
     let lines = [];
 
@@ -63,10 +117,10 @@ try {
     lines.push(`Address: ${order.deliveryAddress || "N/A"}`);
     lines.push("");
 
-    if (Array.isArray(order.items)) {
-      order.items.forEach(item => {
-        const rowTotal = (Number(item.price) || 0) * (Number(item.qty) || 0);
-        lines.push(`${item.name} x${item.qty} - ₹${rowTotal.toFixed(2)}`);
+    if(Array.isArray(order.items)){
+      order.items.forEach(item=>{
+        const total = (item.price || 0) * (item.qty || 0);
+        lines.push(`${item.name} x${item.qty} - ₹${total.toFixed(2)}`);
       });
     }
 
@@ -78,24 +132,21 @@ try {
 
     document.getElementById("orderDetails").innerText = lines.join("\n");
   }
-} catch (error) {
+}
+catch(error){
   document.getElementById("orderDetails").innerText = "Unable to read latest order.";
 }
 
-function scrollLeft() {
+// SCROLL FUNCTIONS
+function scrollLeft(){
   document.querySelector(".addon-slider")
-    .scrollBy({ left: -200, behavior: "smooth" });
+  .scrollBy({left:-200, behavior:"smooth"});
 }
 
-function scrollRight() {
+function scrollRight(){
   document.querySelector(".addon-slider")
-    .scrollBy({ left: 200, behavior: "smooth" });
+  .scrollBy({left:200, behavior:"smooth"});
 }
-
-/* ✅ AUTO REDIRECT TO FEEDBACK AFTER 3 SECONDS */
-setTimeout(() => {
-  window.location.href = "feedback.html";
-}, 3000);
 
 </script>
 
