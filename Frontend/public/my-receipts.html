@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Receipts</title>
+<link rel="stylesheet" href="../src/Styles/Styles.css">
+<style>
+.page-wrap{max-width:980px;margin:40px auto;padding:16px;}
+.top-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.link-btn{background:#fff;color:#fc8019;border:1px solid #fc8019;padding:8px 12px;border-radius:8px;cursor:pointer;}
+.link-btn:hover{background:#fff2e5;}
+.receipt-list{display:grid;gap:14px;}
+.receipt-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,0.1);}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-bottom:10px;}
+.item-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee;}
+.item-row:last-child{border-bottom:none;}
+.empty{background:#fff;padding:20px;border-radius:12px;text-align:center;color:#777;}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+<div class="top-actions">
+<h2 style="color:#fc8019;">My Receipts</h2>
+<button class="link-btn" onclick="location.href='index.html'">Back to Menu</button>
+</div>
+<div id="receiptsContainer" class="receipt-list"></div>
+</div>
+
+<script>
+const API_BASE="http://localhost:5000";
+
+function getAuthToken(){
+return localStorage.getItem("authToken")||"";
+}
+
+function redirectToLogin(){
+const nextUrl=encodeURIComponent("my-receipts.html");
+window.location.href=`login.html?returnUrl=${nextUrl}`;
+}
+
+function formatMoney(value){
+return `₹${Number(value||0).toFixed(2)}`;
+}
+
+function buildItemsHtml(items){
+if(!Array.isArray(items) || items.length===0){
+return "<div class=\"item-row\"><span>No items available</span><span>-</span></div>";
+}
+
+return items.map(item=>{
+const qty=Number(item.qty)||0;
+const price=Number(item.price)||0;
+const rowTotal=qty*price;
+const name=item.name||"Unnamed item";
+return `<div class=\"item-row\"><span>${name} x${qty}</span><span>${formatMoney(rowTotal)}</span></div>`;
+}).join("");
+}
+
+function renderReceipts(receipts){
+const container=document.getElementById("receiptsContainer");
+if(!Array.isArray(receipts) || receipts.length===0){
+container.innerHTML="<div class=\"empty\">No receipts found for this account yet.</div>";
+return;
+}
+
+container.innerHTML=receipts.map(receipt=>`
+<div class="receipt-card">
+<div class="meta">
+<div><b>Receipt No:</b> ${receipt.receipt_number||"N/A"}</div>
+<div><b>Order ID:</b> ${receipt.order_id||"N/A"}</div>
+<div><b>Created:</b> ${receipt.created_at?new Date(receipt.created_at).toLocaleString():"N/A"}</div>
+<div><b>Status:</b> ${receipt.status||"generated"}</div>
+</div>
+<div class="meta">
+<div><b>Name:</b> ${receipt.customer_name||"N/A"}</div>
+<div><b>Phone:</b> ${receipt.customer_phone||"N/A"}</div>
+<div><b>Address:</b> ${receipt.delivery_address||"N/A"}</div>
+</div>
+<div style="margin:10px 0;"><b>Items</b></div>
+${buildItemsHtml(receipt.items)}
+<div style="margin-top:12px;line-height:1.6;">
+<div>Subtotal: ${formatMoney(receipt.subtotal)}</div>
+<div>Delivery: ${formatMoney(receipt.delivery)}</div>
+<div>Tax: ${formatMoney(receipt.tax)}</div>
+<div><b>Grand Total: ${formatMoney(receipt.grand_total)}</b></div>
+</div>
+</div>
+`).join("");
+}
+
+async function loadMyReceipts(){
+const token=getAuthToken();
+if(!token){
+redirectToLogin();
+return;
+}
+
+try{
+const response=await fetch(`${API_BASE}/api/receipts/my`,{
+headers:{"Authorization":`Bearer ${token}`}
+});
+
+const result=await response.json();
+if(response.status===401){
+redirectToLogin();
+return;
+}
+if(!response.ok || !result.success){
+throw new Error(result.error||"Failed to load receipts");
+}
+
+renderReceipts(result.receipts||[]);
+}
+catch(error){
+document.getElementById("receiptsContainer").innerHTML="<div class=\"empty\">Unable to load receipts right now.</div>";
+console.error("Receipt history error:",error);
+}
+}
+
+loadMyReceipts();
+</script>
+</body>
+</html>

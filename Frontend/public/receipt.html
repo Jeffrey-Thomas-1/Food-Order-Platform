@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt</title>
+<link rel="stylesheet" href="../src/Styles/Styles.css">
+</head>
+
+<body>
+
+<div class="receipt-card">
+
+<h2>Your Order Receipt</h2>
+
+<pre id="orderDetails"></pre>
+
+<h3>Add-ons</h3>
+
+<div class="addon-container">
+
+<button onclick="scrollLeft()">◀</button>
+
+<div class="addon-slider">
+<div class="addon-card">Garlic Bread</div>
+<div class="addon-card">Chicken Nuggets</div>
+<div class="addon-card">Cheese Dip</div>
+<div class="addon-card">Ice Cream</div>
+<div class="addon-card">Cold Coffee</div>
+</div>
+
+<button onclick="scrollRight()">▶</button>
+
+</div>
+
+<!-- ✅ BACK BUTTON -->
+<button onclick="location.href='index.html'" class="place-btn">
+Back to Menu
+</button>
+
+<!-- ✅ ADD THIS BUTTON HERE -->
+<button onclick="location.href='feedback.html'" class="place-btn">
+Give Feedback
+</button>
+
+</div>
+
+<script>
+
+let rawOrder = localStorage.getItem("lastOrder");
+
+try {
+  if (!rawOrder) {
+    document.getElementById("orderDetails").innerText = "No recent order found.";
+  } else {
+    let order = JSON.parse(rawOrder);
+    let lines = [];
+
+    lines.push(`Order ID: ${order.orderId || "N/A"}`);
+    lines.push(`Receipt No: ${order.receiptNumber || "N/A"}`);
+    lines.push(`Customer: ${order.customerName || "N/A"}`);
+    lines.push(`Phone: ${order.customerPhone || "N/A"}`);
+    lines.push(`Address: ${order.deliveryAddress || "N/A"}`);
+    lines.push("");
+
+    if (Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        const rowTotal = (Number(item.price) || 0) * (Number(item.qty) || 0);
+        lines.push(`${item.name} x${item.qty} - ₹${rowTotal.toFixed(2)}`);
+      });
+    }
+
+    lines.push("");
+    lines.push(`Subtotal: ₹${Number(order.subtotal || 0).toFixed(2)}`);
+    lines.push(`Delivery: ₹${Number(order.delivery || 0).toFixed(2)}`);
+    lines.push(`GST: ₹${Number(order.tax || 0).toFixed(2)}`);
+    lines.push(`Grand Total: ₹${Number(order.grandTotal || 0).toFixed(2)}`);
+
+    document.getElementById("orderDetails").innerText = lines.join("\n");
+  }
+} catch (error) {
+  document.getElementById("orderDetails").innerText = "Unable to read latest order.";
+}
+
+function scrollLeft() {
+  document.querySelector(".addon-slider")
+    .scrollBy({ left: -200, behavior: "smooth" });
+}
+
+function scrollRight() {
+  document.querySelector(".addon-slider")
+    .scrollBy({ left: 200, behavior: "smooth" });
+}
+
+/* ✅ AUTO REDIRECT TO FEEDBACK AFTER 3 SECONDS */
+setTimeout(() => {
+  window.location.href = "feedback.html";
+}, 3000);
+
+</script>
+
+</body>
+</html>
