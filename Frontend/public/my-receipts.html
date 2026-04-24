@@ -16,6 +16,36 @@
 .item-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee;}
 .item-row:last-child{border-bottom:none;}
 .empty{background:#fff;padding:20px;border-radius:12px;text-align:center;color:#777;}
+.stamp {
+position:absolute;
+top:10px;
+right:10px;
+transform:rotate(-15deg);
+font-size:18px;
+font-weight:bold;
+padding:4px 10px;
+border-radius:6px;
+opacity:0.8;
+}
+
+.stamp.paid {
+border:2px solid green;
+color:green;
+}
+
+.stamp.delivered {
+border:2px solid blue;
+color:blue;
+}
+
+.stamp.cancelled {
+border:2px solid red;
+color:red;
+}
+
+.receipt-card{
+position:relative;
+}
 </style>
 </head>
 <body>
@@ -66,6 +96,17 @@ return;
 
 container.innerHTML=receipts.map(receipt=>`
 <div class="receipt-card">
+    <div class="stamp ${
+receipt.order_id % 3 === 0 ? "paid" :
+receipt.order_id % 3 === 1 ? "delivered" :
+"cancelled"
+}">
+${
+receipt.order_id % 3 === 0 ? "PAID" :
+receipt.order_id % 3 === 1 ? "DELIVERED" :
+"CANCELLED"
+}
+</div>
 <div class="meta">
 <div><b>Receipt No:</b> ${receipt.receipt_number||"N/A"}</div>
 <div><b>Order ID:</b> ${receipt.order_id||"N/A"}</div>
