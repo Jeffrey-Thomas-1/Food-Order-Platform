@@ -4,89 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Receipt</title>
-
-<style>
-body{
-  font-family: 'Segoe UI', sans-serif;
-  background:#f5e6d3;
-}
-
-.receipt-card{
-  width:400px;
-  margin:50px auto;
-  background:#eee;
-  padding:20px;
-  border-radius:15px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.2);
-}
-
-h2{
-  color:#fc8019;
-}
-
-.addon-container{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.addon-slider{
-  display:flex;
-  overflow-x:auto;
-  gap:10px;
-}
-
-.addon-card{
-  min-width:120px;
-  background:#fff;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-}
-
-.place-btn{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  background:#fc8019;
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.place-btn:hover{
-  background:#e56f12;
-}
-</style>
+<link rel="stylesheet" href="../src/Styles/Styles.css">
 </head>
 <style>
-.stamp {
+.stamp{
 position:absolute;
-top:10px;
-right:10px;
-transform:rotate(-15deg);
-font-size:18px;
+top:20px;
+right:20px;
+transform:rotate(-20deg);
+font-size:32px;
 font-weight:bold;
-padding:4px 10px;
-border-radius:6px;
-opacity:0.8;
-}
-
-.stamp.paid {
-border:2px solid green;
+padding:10px 20px;
+border:4px solid green;
 color:green;
-}
-
-.stamp.delivered {
-border:2px solid blue;
-color:blue;
-}
-
-.stamp.cancelled {
-border:2px solid red;
-color:red;
+border-radius:8px;
+opacity:0.8;
 }
 
 .receipt-card{
@@ -97,17 +29,7 @@ position:relative;
 <body>
 
 <div class="receipt-card">
-    <div class="stamp ${
-receipt.order_id % 3 === 0 ? "paid" :
-receipt.order_id % 3 === 1 ? "delivered" :
-"cancelled"
-}">
-${
-receipt.order_id % 3 === 0 ? "PAID" :
-receipt.order_id % 3 === 1 ? "DELIVERED" :
-"CANCELLED"
-}
-</div>
+    <div class="stamp">PAID</div>
 
 <h2>Your Order Receipt</h2>
 
@@ -116,79 +38,75 @@ receipt.order_id % 3 === 1 ? "DELIVERED" :
 <h3>Add-ons</h3>
 
 <div class="addon-container">
+
 <button onclick="scrollLeft()">◀</button>
 
 <div class="addon-slider">
-  <div class="addon-card">Garlic Bread</div>
-  <div class="addon-card">Chicken Nuggets</div>
-  <div class="addon-card">Cheese Dip</div>
-  <div class="addon-card">Ice Cream</div>
-  <div class="addon-card">Cold Coffee</div>
+
+<div class="addon-card">Garlic Bread</div>
+<div class="addon-card">Chicken Nuggets</div>
+<div class="addon-card">Cheese Dip</div>
+<div class="addon-card">Ice Cream</div>
+<div class="addon-card">Cold Coffee</div>
+
 </div>
 
 <button onclick="scrollRight()">▶</button>
+
 </div>
 
-<!-- ✅ CLEAN BUTTONS -->
 <button onclick="location.href='index.html'" class="place-btn">
 Back to Menu
-</button>
-
-<button onclick="location.href='feedback.html'" class="place-btn">
-Give Feedback
 </button>
 
 </div>
 
 <script>
 
-// LOAD ORDER DATA
-let rawOrder = localStorage.getItem("lastOrder");
+let rawOrder=localStorage.getItem("lastOrder");
 
 try{
-  if(!rawOrder){
-    document.getElementById("orderDetails").innerText = "No recent order found.";
-  }
-  else{
-    let order = JSON.parse(rawOrder);
-    let lines = [];
+if(!rawOrder){
+document.getElementById("orderDetails").innerText="No recent order found.";
+}
+else{
+let order=JSON.parse(rawOrder);
+let lines=[];
+lines.push(`Order ID: ${order.orderId||"N/A"}`);
+lines.push(`Receipt No: ${order.receiptNumber||"N/A"}`);
+lines.push(`Customer: ${order.customerName||"N/A"}`);
+lines.push(`Phone: ${order.customerPhone||"N/A"}`);
+lines.push(`Address: ${order.deliveryAddress||"N/A"}`);
+lines.push("");
 
-    lines.push(`Order ID: ${order.orderId || "N/A"}`);
-    lines.push(`Receipt No: ${order.receiptNumber || "N/A"}`);
-    lines.push(`Customer: ${order.customerName || "N/A"}`);
-    lines.push(`Phone: ${order.customerPhone || "N/A"}`);
-    lines.push(`Address: ${order.deliveryAddress || "N/A"}`);
-    lines.push("");
+if(Array.isArray(order.items)){
+order.items.forEach(item=>{
+const rowTotal=(Number(item.price)||0)*(Number(item.qty)||0);
+lines.push(`${item.name} x${item.qty} - ₹${rowTotal.toFixed(2)}`);
+});
+}
 
-    if(Array.isArray(order.items)){
-      order.items.forEach(item=>{
-        const total = (item.price || 0) * (item.qty || 0);
-        lines.push(`${item.name} x${item.qty} - ₹${total.toFixed(2)}`);
-      });
-    }
+lines.push("");
+lines.push(`Subtotal: ₹${Number(order.subtotal||0).toFixed(2)}`);
+lines.push(`Delivery: ₹${Number(order.delivery||0).toFixed(2)}`);
+lines.push(`GST: ₹${Number(order.tax||0).toFixed(2)}`);
+lines.push(`Grand Total: ₹${Number(order.grandTotal||0).toFixed(2)}`);
 
-    lines.push("");
-    lines.push(`Subtotal: ₹${Number(order.subtotal || 0).toFixed(2)}`);
-    lines.push(`Delivery: ₹${Number(order.delivery || 0).toFixed(2)}`);
-    lines.push(`GST: ₹${Number(order.tax || 0).toFixed(2)}`);
-    lines.push(`Grand Total: ₹${Number(order.grandTotal || 0).toFixed(2)}`);
-
-    document.getElementById("orderDetails").innerText = lines.join("\n");
-  }
+document.getElementById("orderDetails").innerText=lines.join("\n");
+}
 }
 catch(error){
-  document.getElementById("orderDetails").innerText = "Unable to read latest order.";
+document.getElementById("orderDetails").innerText="Unable to read latest order.";
 }
 
-// SCROLL FUNCTIONS
 function scrollLeft(){
-  document.querySelector(".addon-slider")
-  .scrollBy({left:-200, behavior:"smooth"});
+document.querySelector(".addon-slider")
+.scrollBy({left:-200, behavior:"smooth"});
 }
 
 function scrollRight(){
-  document.querySelector(".addon-slider")
-  .scrollBy({left:200, behavior:"smooth"});
+document.querySelector(".addon-slider")
+.scrollBy({left:200, behavior:"smooth"});
 }
 
 </script>
