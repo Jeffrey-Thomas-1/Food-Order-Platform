@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feedback</title>
 
   <style>
@@ -26,10 +28,13 @@
     }
 
     .stars span {
-      font-size: 28px;
+      font-size: 32px;
       cursor: pointer;
       color: gray;
       transition: 0.2s;
+      font-family: 'Arial Unicode MS', Arial, sans-serif;
+      display: inline-block;
+      margin: 0 5px;
     }
 
     .stars span:hover {
@@ -129,7 +134,7 @@ function createStars(id) {
 
   for (let i = 1; i <= 5; i++) {
     let star = document.createElement("span");
-    star.innerHTML = "★";
+    star.textContent = "★";
 
     star.onmouseover = () => updateStars(id, i);
     star.onclick = () => {

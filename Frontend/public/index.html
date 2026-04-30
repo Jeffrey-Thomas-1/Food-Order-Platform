@@ -6,7 +6,6 @@
 <title>Foodie Orange Pro</title>
 
 <style>
-/* (UNCHANGED CSS — kept exactly same) */
 :root{
 --primary:#fc8019;
 --primary-dark:#e56f12;
@@ -43,25 +42,35 @@ z-index:1000;
 
 .cart-icon{position:relative;cursor:pointer;font-size:22px;}
 
-.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;}
 
 .nav-btn{
-background:#fff;color:#fc8019;border:none;
-padding:6px 14px;border-radius:6px;
-font-weight:600;cursor:pointer;
+background:#fff;
+color:#fc8019;
+border:none;
+padding:6px 14px;
+border-radius:6px;
+font-weight:600;
+cursor:pointer;
+transition:0.2s;
 }
+
+.nav-btn:hover{background:#ffe2c7;}
 
 .profile-menu{position:relative;}
 .profile-btn{
 width:36px;height:36px;border-radius:50%;
 border:none;background:#fff;color:#fc8019;
 cursor:pointer;
+font-weight:700;
 }
 
 .profile-dropdown{
 display:none;position:absolute;right:0;top:44px;
 background:#fff;border-radius:10px;
 box-shadow:0 8px 24px rgba(0,0,0,0.16);
+min-width:160px;
+overflow:hidden;
 }
 
 .profile-dropdown.show{display:block;}
@@ -71,9 +80,198 @@ position:absolute;top:-8px;right:-10px;
 background:#fff;color:#fc8019;
 font-size:12px;padding:2px 6px;
 border-radius:50%;
+font-weight:700;
 }
 
-/* rest CSS unchanged... */
+.controls{
+padding:20px;
+display:flex;
+gap:15px;
+flex-wrap:wrap;
+}
+
+.controls input,
+.controls select{
+padding:10px;
+border-radius:10px;
+border:1px solid #ffd0a6;
+min-width:180px;
+}
+
+.container{
+display:flex;
+padding:20px;
+gap:20px;
+align-items:flex-start;
+}
+
+.food-grid{
+flex:3;
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+gap:20px;
+}
+
+.card{
+background:#fff;
+border-radius:16px;
+box-shadow:0 8px 20px rgba(0,0,0,0.08);
+padding:20px;
+transition:0.3s;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.card:hover{transform:translateY(-5px);}
+
+.discount{
+background:#fc8019;
+color:#fff;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+display:inline-block;
+width:max-content;
+}
+
+.old-price{
+text-decoration:line-through;
+color:#888;
+font-size:14px;
+}
+
+.new-price{
+font-weight:bold;
+color:#222;
+font-size:18px;
+}
+
+.description{
+color:#555;
+font-size:13px;
+line-height:1.5;
+}
+
+.card-actions{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.add-btn,
+.remove-btn,
+.qty-btn,
+.place-btn{
+background:#fc8019;
+color:#fff;
+border:none;
+padding:8px 15px;
+border-radius:8px;
+cursor:pointer;
+font-weight:600;
+}
+
+.remove-btn,
+.qty-btn{
+background:#fff2e5;
+color:#fc8019;
+border:1px solid #fc8019;
+}
+
+.add-btn:hover,
+.place-btn:hover{background:#e56f12;}
+.remove-btn:hover,
+.qty-btn:hover{background:#ffe2c7;}
+
+.cart{
+flex:1;
+background:#fff;
+border-radius:16px;
+box-shadow:0 8px 20px rgba(0,0,0,0.12);
+padding:20px;
+height:80vh;
+overflow:auto;
+position:sticky;
+top:90px;
+}
+
+.summary{
+border-top:1px solid #eee;
+padding-top:10px;
+margin-top:10px;
+font-size:14px;
+line-height:1.6;
+}
+
+.cart-item{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:12px;
+padding:10px 0;
+border-bottom:1px dashed #eee;
+}
+
+.cart-item-meta{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+.cart-actions{
+display:flex;
+gap:8px;
+margin-top:8px;
+flex-wrap:wrap;
+}
+
+.qty-label{
+min-width:18px;
+text-align:center;
+font-weight:600;
+}
+
+.cart-empty,
+.results-empty,
+.load-error{
+background:#fff;
+border-radius:14px;
+padding:18px;
+box-shadow:0 8px 20px rgba(0,0,0,0.08);
+color:#555;
+}
+
+.profile-dropdown button{
+display:block;
+width:100%;
+border:none;
+background:#fff;
+color:#222;
+padding:10px 14px;
+text-align:left;
+cursor:pointer;
+}
+
+.profile-dropdown button:hover{background:#fff2e5;}
+
+@media(max-width:768px){
+.container{flex-direction:column;}
+.cart{
+position:fixed;
+bottom:-100%;
+left:0;
+width:100%;
+height:60%;
+transition:0.4s;
+border-radius:20px 20px 0 0;
+z-index:999;
+}
+.cart.open{bottom:0;}
+.nav-btn{padding:5px 10px;font-size:12px;}
+.controls input,
+.controls select{flex:1 1 100%;}
+}
 </style>
 </head>
 
@@ -93,7 +291,7 @@ border-radius:50%;
 </a>
 
 <div class="profile-menu" id="profileMenu" style="display:none;">
-<button class="profile-btn" id="profileToggle" onclick="toggleProfileMenu(event)">👤</button>
+<button class="profile-btn" id="profileToggle" onclick="toggleProfileMenu(event)">U</button>
 <div class="profile-dropdown" id="profileDropdown">
 <button onclick="location.href='profile.html'">View Profile</button>
 <button onclick="location.href='my-receipts.html'">My Receipts</button>
@@ -129,7 +327,6 @@ border-radius:50%;
 <div id="cartItems"></div>
 <div class="summary" id="summary"></div>
 
-<!-- ✅ fixed button -->
 <button class="place-btn" onclick="placeOrder()">Place Order</button>
 
 </div>
@@ -138,47 +335,332 @@ border-radius:50%;
 <script>
 const API_BASE="http://localhost:5000";
 let foods=[];
+let cart={};
 
-/* CART */
-let cart=JSON.parse(localStorage.getItem("cart"))||{};
+function parseCart(){
+try{
+const saved=JSON.parse(localStorage.getItem("cart")||"{}");
+cart=saved && typeof saved==="object" ? saved : {};
+}
+catch(error){
+cart={};
+localStorage.removeItem("cart");
+}
+}
 
 function saveCart(){
 localStorage.setItem("cart",JSON.stringify(cart));
 }
 
-/* ✅ kept wrapper function (important) */
-function placeOrder(){
-placeOrderAsync();
+function getAuthUser(){
+try{
+return JSON.parse(localStorage.getItem("authUser")||"null");
+}
+catch(error){
+return null;
+}
 }
 
-async function placeOrderAsync(){
+function getAuthToken(){
+return localStorage.getItem("authToken")||"";
+}
 
-if(Object.keys(cart).length===0){
-alert("Your cart is empty!");
+function money(value){
+return `₹${Number(value||0).toFixed(2)}`;
+}
+
+function calculateCartTotals(){
+const items=Object.values(cart);
+const subtotal=items.reduce((sum,item)=>sum+(Number(item.finalPrice)||0)*(Number(item.qty)||0),0);
+const delivery=items.length>0?50:0;
+const tax=subtotal*0.05;
+const grandTotal=subtotal+delivery+tax;
+const totalQty=items.reduce((sum,item)=>sum+Number(item.qty||0),0);
+return {items,subtotal,delivery,tax,grandTotal,totalQty};
+}
+
+function normalizeMenuItem(item){
+const price=Number(item.price)||0;
+const discount=Number(item.discount)||0;
+const finalPrice=Math.max(0,Math.round(price-(price*discount/100)));
+return {
+id:item.id,
+name:item.name,
+category:item.category||"Uncategorized",
+price,
+discount,
+description:item.description||"",
+finalPrice,
+qty:1
+};
+}
+
+function updateCartQuantity(id,delta){
+const current=cart[id];
+if(!current){
 return;
 }
 
-try{
-let response=await fetch(`${API_BASE}/api/orders`,{method:"POST"});
-let result=await response.json();
+current.qty=Number(current.qty||0)+delta;
+if(current.qty<=0){
+delete cart[id];
+}
 
-localStorage.setItem("lastOrder",JSON.stringify(result));
-
-alert("Order placed successfully!");
-
-cart={};
 saveCart();
+renderCart();
+renderFoods();
+}
 
-window.location.href="receipt.html";
+function addToCart(id){
+const item=foods.find(food=>String(food.id)===String(id));
+if(!item){
+return;
 }
-catch(error){
-alert("Unable to place order.");
+
+if(cart[id]){
+cart[id].qty+=1;
 }
+else{
+cart[id]=normalizeMenuItem(item);
+}
+
+saveCart();
+renderCart();
+renderFoods();
+}
+
+function removeFromCart(id){
+updateCartQuantity(id,-1);
+}
+
+function renderFoods(){
+const grid=document.getElementById("food");
+const search=document.getElementById("search").value.trim().toLowerCase();
+const selectedCategory=document.getElementById("category").value;
+
+const filteredFoods=foods.filter(food=>{
+const matchesSearch=food.name.toLowerCase().includes(search) || (food.description||"").toLowerCase().includes(search);
+const matchesCategory=selectedCategory==="all" || food.category===selectedCategory;
+return matchesSearch && matchesCategory;
+});
+
+if(!filteredFoods.length){
+grid.innerHTML='<div class="results-empty">No food items match your search.</div>';
+return;
+}
+
+grid.innerHTML=filteredFoods.map(food=>{
+const inCartQty=cart[food.id]?.qty||0;
+return `
+<div class="card">
+  <div class="discount">${food.discount}% OFF</div>
+  <h4>${food.name}</h4>
+  <div style="font-size:13px;color:#888;">${food.category}</div>
+  <div class="old-price">${money(food.price)}</div>
+  <div class="new-price">${money(food.finalPrice)}</div>
+  <div class="description">${food.description||"Freshly prepared menu item from the kitchen."}</div>
+  ${inCartQty>0?`<div style="font-size:12px;color:#666;">In cart: ${inCartQty}</div>`:""}
+  <div class="card-actions">
+    <button class="add-btn" onclick="addToCart(${food.id})">Add</button>
+    ${inCartQty>0?`<button class="remove-btn" onclick="removeFromCart(${food.id})">Remove</button>`:""}
+  </div>
+</div>`;
+}).join("");
+}
+
+function renderCart(){
+const cartItems=document.getElementById("cartItems");
+const summary=document.getElementById("summary");
+const totals=calculateCartTotals();
+
+document.getElementById("count").innerText=String(totals.totalQty);
+
+if(!totals.items.length){
+cartItems.innerHTML='<div class="cart-empty">Your cart is empty.</div>';
+summary.innerHTML='Add menu items to see the billing summary here.';
+return;
+}
+
+cartItems.innerHTML=totals.items.map(item=>`
+<div class="cart-item">
+  <div class="cart-item-meta">
+    <strong>${item.name}</strong>
+    <span style="font-size:12px;color:#777;">${item.category}</span>
+    <span style="font-size:12px;color:#777;">${money(item.finalPrice)} each</span>
+    <div class="cart-actions">
+      <button class="qty-btn" onclick="removeFromCart(${item.id})">-</button>
+      <span class="qty-label">${item.qty}</span>
+      <button class="qty-btn" onclick="addToCart(${item.id})">+</button>
+    </div>
+  </div>
+  <strong>${money(item.finalPrice*item.qty)}</strong>
+</div>
+`).join("");
+
+summary.innerHTML=`
+Subtotal: ${money(totals.subtotal)}<br>
+Delivery: ${money(totals.delivery)}<br>
+GST (5%): ${money(totals.tax)}<br>
+<hr>
+<b>Grand Total: ${money(totals.grandTotal)}</b>
+`;
+}
+
+function initAuthNav(){
+const loginBtn=document.getElementById("loginBtn");
+const signupBtn=document.getElementById("signupBtn");
+const profileMenu=document.getElementById("profileMenu");
+const profileToggle=document.getElementById("profileToggle");
+const user=getAuthUser();
+
+if(!loginBtn || !signupBtn || !profileMenu || !profileToggle){
+return;
+}
+
+if(user){
+const label=String(user.username||user.email||"U").trim();
+profileToggle.innerText=label.charAt(0).toUpperCase();
+profileToggle.title=`Profile - ${label}`;
+loginBtn.style.display="none";
+signupBtn.style.display="none";
+profileMenu.style.display="block";
+}
+else{
+profileToggle.innerText="U";
+profileToggle.title="Profile";
+loginBtn.style.display="inline-block";
+signupBtn.style.display="inline-block";
+profileMenu.style.display="none";
+}
+}
+
+function toggleProfileMenu(event){
+event.stopPropagation();
+document.getElementById("profileDropdown").classList.toggle("show");
+}
+
+function closeProfileMenu(){
+document.getElementById("profileDropdown").classList.remove("show");
+}
+
+function logout(){
+localStorage.removeItem("authToken");
+localStorage.removeItem("authUser");
+closeProfileMenu();
+initAuthNav();
 }
 
 function toggleCart(){
 document.getElementById("cart").classList.toggle("open");
 }
+
+function placeOrder(){
+placeOrderAsync();
+}
+
+async function placeOrderAsync(){
+if(!Object.keys(cart).length){
+alert("Your cart is empty!");
+return;
+}
+
+const totals=calculateCartTotals();
+const user=getAuthUser();
+const payload={
+items:totals.items.map(item=>({
+id:item.id,
+name:item.name,
+category:item.category,
+price:item.finalPrice,
+originalPrice:item.price,
+discount:item.discount,
+qty:item.qty
+})),
+subtotal:totals.subtotal,
+delivery:totals.delivery,
+tax:totals.tax,
+grandTotal:totals.grandTotal,
+customerName:user?.username||"Walk-in Customer",
+customerPhone:"",
+deliveryAddress:""
+};
+
+try{
+const headers={"Content-Type":"application/json"};
+const token=getAuthToken();
+if(token){
+headers.Authorization=`Bearer ${token}`;
+}
+
+const response=await fetch(`${API_BASE}/api/orders`,{
+method:"POST",
+headers,
+body:JSON.stringify(payload)
+});
+
+const result=await response.json();
+if(!response.ok || !result.success){
+throw new Error(result.error||result.message||"Unable to place order");
+}
+
+localStorage.setItem("lastOrder",JSON.stringify({
+...payload,
+...result
+}));
+
+cart={};
+saveCart();
+renderCart();
+alert("Order placed successfully!");
+window.location.href="receipt.html";
+}
+catch(error){
+alert(error.message||"Unable to place order.");
+}
+}
+
+async function loadFoods(){
+const grid=document.getElementById("food");
+
+try{
+const response=await fetch(`${API_BASE}/api/foods`);
+const result=await response.json();
+
+if(!response.ok || !result.success){
+throw new Error(result.error||"Failed to fetch menu");
+}
+
+foods=(result.data||[]).map(item=>{
+const price=Number(item.price)||0;
+const discount=Number(item.discount)||0;
+return {
+id:item.id,
+name:item.name,
+category:item.category||"Uncategorized",
+price,
+discount,
+description:item.description||"",
+finalPrice:Math.max(0,Math.round(price-(price*discount/100)))
+};
+});
+
+renderFoods();
+}
+catch(error){
+grid.innerHTML=`<div class="load-error">Unable to load menu items from the backend. ${error.message}</div>`;
+}
+}
+
+document.getElementById("search").addEventListener("input",renderFoods);
+document.getElementById("category").addEventListener("change",renderFoods);
+document.addEventListener("click",closeProfileMenu);
+window.addEventListener("focus",initAuthNav);
+window.addEventListener("storage",initAuthNav);
+
+parseCart();
+initAuthNav();
+renderCart();
+loadFoods();
 </script>
 
 </body>
